@@ -3,8 +3,11 @@ package com.example.gpsapp.data;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.location.Location;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority; // Importante
+import com.google.android.gms.tasks.CancellationTokenSource; // Importante
 import com.google.android.gms.tasks.OnSuccessListener;
 
 public class LocationRepository {
@@ -16,7 +19,10 @@ public class LocationRepository {
     }
 
     @SuppressLint("MissingPermission")
-    public void getLastLocation(OnSuccessListener<Location> onSuccessListener) {
-        fusedLocationClient.getLastLocation().addOnSuccessListener(onSuccessListener);
+    public void getCurrentLocation(OnSuccessListener<Location> onSuccessListener) {
+        fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                new CancellationTokenSource().getToken()
+        ).addOnSuccessListener(onSuccessListener);
     }
 }

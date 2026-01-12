@@ -6,7 +6,9 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+
 import com.example.gpsapp.data.LocationRepository;
+import com.example.gpsapp.model.LocationData; // Importamos el modelo
 
 public class LocationViewModel extends AndroidViewModel {
 
@@ -24,18 +26,14 @@ public class LocationViewModel extends AndroidViewModel {
     }
 
     public void fetchLocation() {
-        repository.getLastLocation(location -> {
+        repository.getCurrentLocation(location -> {
             if (location != null) {
-                formatLocation(location);
+                // Usamos el modelo LocationData
+                LocationData data = new LocationData(location.getLatitude(), location.getLongitude());
+                locationText.setValue(data.toString());
             } else {
-                locationText.setValue("No se pudo obtener la ubicación");
+                locationText.setValue("No se pudo obtener la ubicación actual");
             }
         });
-    }
-
-    private void formatLocation(Location location) {
-        double lat = location.getLatitude();
-        double lon = location.getLongitude();
-        locationText.setValue("Latitud: " + lat + "\nLongitud: " + lon);
     }
 }
