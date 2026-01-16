@@ -8,12 +8,15 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.gpsapp.data.LocationRepository;
-import com.example.gpsapp.model.LocationData; // Importamos el modelo
+import com.example.gpsapp.model.LocationData;
 
 public class LocationViewModel extends AndroidViewModel {
 
     private final LocationRepository repository;
     private final MutableLiveData<String> locationText = new MutableLiveData<>();
+
+    // LiveData para pasar la ubicación al mapa
+    private final MutableLiveData<Location> location = new MutableLiveData<>();
 
     public LocationViewModel(@NonNull Application application) {
         super(application);
@@ -25,12 +28,19 @@ public class LocationViewModel extends AndroidViewModel {
         return locationText;
     }
 
+    public LiveData<Location> getLocation() {
+        return location;
+    }
+
     public void fetchLocation() {
-        repository.getCurrentLocation(location -> {
-            if (location != null) {
-                // Usamos el modelo LocationData
-                LocationData data = new LocationData(location.getLatitude(), location.getLongitude());
+        repository.getCurrentLocation(loc -> {
+            if (loc != null) {
+                // Actualizamos el modelo de texto
+                LocationData data = new LocationData(loc.getLatitude(), loc.getLongitude());
                 locationText.setValue(data.toString());
+
+                // Actualizamos el objeto Location para el mapa
+                location.setValue(loc);
             } else {
                 locationText.setValue("No se pudo obtener la ubicación actual");
             }

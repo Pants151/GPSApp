@@ -16,33 +16,76 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.gpsapp.viewmodel.LocationViewModel;
 
+// Importaciones para el mapa
+import org.osmdroid.config.Configuration;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Marker;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final int LOCATION_PERMISSION_CODE = 100;
 
     private TextView txtLocation;
     private Button btnGetLocation;
-
     private LocationViewModel viewModel;
+
+    // Variables para el mapa
+    private MapView mapView;
+    private Marker userMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Configuración de OSM
+        Configuration.getInstance().setUserAgentValue(getPackageName());
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
         txtLocation = findViewById(R.id.txtLocation);
         btnGetLocation = findViewById(R.id.btnGetLocation);
 
-        // Inicializar ViewModel
+        // Inicializar MapView
+        mapView = findViewById(R.id.map);
+        mapView.setMultiTouchControls(true);
+        mapView.getController().setZoom(18.0);
+
         viewModel = new ViewModelProvider(this).get(LocationViewModel.class);
 
-        // Observar cambios
+        // Observar texto
         viewModel.getLocationText().observe(this, text -> {
             txtLocation.setText(text);
         });
 
+        // Observar objeto Location
+        viewModel.getLocation().observe(this, location -> {
+            if (location != null) {
+                updateMap(location.getLatitude(), location.getLongitude());
+            }
+        });
+
         btnGetLocation.setOnClickListener(v -> checkPermissionAndGetLocation());
+    }
+
+    // Método para actualizar el mapa y marcador
+    private void updateMap(double lat, double lon) {
+        GeoPoint point = new GeoPoint(lat, lon);
+
+        // Centrar el mapa
+        mapView.getController().setCenter(point);
+
+        // Crear o mover el marcador
+        if (userMarker == null) {
+            userMarker = new Marker(mapView);
+            userMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            userMarker.setTitle("Mi ubicación");
+            mapView.getOverlays().add(userMarker);
+        }
+
+        userMarker.setPosition(point);
+        mapView.invalidate(); // Refrescar mapa
     }
 
     private void checkPermissionAndGetLocation() {
@@ -69,6 +112,23 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    // Gestionar ciclo de vida del mapa
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mapView != null) {
+            mapView.onResume();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mapView != null) {
+            mapView.onPause();
         }
     }
 }
